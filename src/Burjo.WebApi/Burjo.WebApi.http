@@ -1,0 +1,6 @@
+@Burjo.WebApi_HostAddress = http://localhost:5156
+
+GET {{Burjo.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
