@@ -95,13 +95,13 @@ builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
 builder.Services.AddScoped<IHealthConditionRepository, HealthConditionRepository>();
 builder.Services.AddScoped<IExerciseRepository, ExerciseRepository>();
 builder.Services.AddScoped<IUserScheduleRepository, UserScheduleRepository>();
-// builder.Services.AddScoped<IMoodLogRepository, MoodLogRepository>();
+builder.Services.AddScoped<IMoodLogRepository, MoodLogRepository>(); // ✅ ACTIVATED
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IHealthService, HealthService>();
 builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
-// builder.Services.AddScoped<IMoodService, MoodService>();
-// builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<IMoodService, MoodService>(); // ✅ ACTIVATED
+builder.Services.AddScoped<IChatService, ChatService>(); // ✅ ACTIVATED
 
 var app = builder.Build();
 
