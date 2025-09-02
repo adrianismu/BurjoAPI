@@ -151,6 +151,32 @@ public class ChatController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Get chat operating hours information
+    /// </summary>
+    [HttpGet("operating-hours")]
+    public ActionResult<ChatOperatingHoursDto> GetOperatingHours()
+    {
+        try
+        {
+            var operatingHoursInfo = _chatService.GetOperatingHoursInfo();
+
+            return Ok(new
+            {
+                message = "Operating hours information retrieved successfully",
+                data = operatingHoursInfo
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new 
+            { 
+                message = "An error occurred while getting operating hours information", 
+                error = ex.Message 
+            });
+        }
+    }
+
     private Guid GetCurrentUserId()
     {
         var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

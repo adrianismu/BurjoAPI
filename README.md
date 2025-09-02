@@ -306,18 +306,81 @@ Content-Type: application/json
 }
 ```
 
-**Response (200 OK):**
+**Response (200 OK) - During Operating Hours:**
 ```json
 {
+  "message": "Chat response generated successfully",
+  "userMessage": "Halo, saya ingin tips olahraga untuk pemula",
   "botResponse": {
     "response": "Halo! Untuk pemula, saya sarankan mulai dengan jalan kaki 15-20 menit setiap hari. Ini adalah olahraga yang aman dan mudah untuk memulai rutinitas kebugaran Anda.",
-    "timestamp": "2025-08-26T14:30:00Z",
+    "timestamp": "2025-09-02T14:30:00Z",
     "suggestedActions": "Buat jadwal olahraga",
     "quickReplies": [
       "Tips diet sehat",
       "Olahraga untuk menurunkan berat badan",
       "Cara mengatasi nyeri otot"
-    ]
+    ],
+    "isWithinOperatingHours": true,
+    "isEmergencyDetected": false
+  }
+}
+```
+
+**Response (200 OK) - Outside Operating Hours:**
+```json
+{
+  "message": "Chat response generated successfully",
+  "userMessage": "Halo, saya ingin tips olahraga untuk pemula",
+  "botResponse": {
+    "response": "Maaf, layanan chat hanya tersedia pada jam 08:00 - 16:00 WIB. Silakan kembali lagi pada jam operasional. Untuk keadaan darurat, segera hubungi dokter atau layanan kesehatan terdekat.\n\n⏰ Layanan akan tersedia kembali pada: 03/09/2025 08:00 WIB\n\n💡 Tips sementara:\n• Untuk tips kesehatan umum, Anda bisa browsing artikel kesehatan terpercaya\n• Jaga pola makan dan istirahat yang teratur\n• Lakukan olahraga ringan sesuai kemampuan\n\nTerima kasih atas pengertian Anda! 🙏",
+    "timestamp": "2025-09-02T18:30:00Z",
+    "quickReplies": [
+      "Cek jam operasional", 
+      "Tips kesehatan umum", 
+      "Kontak darurat"
+    ],
+    "isWithinOperatingHours": false,
+    "isEmergencyDetected": false,
+    "operatingHoursInfo": "🔒 Layanan chat sedang TUTUP..."
+  }
+}
+```
+
+**Response (200 OK) - Emergency Detected:**
+```json
+{
+  "message": "Chat response generated successfully",
+  "userMessage": "Darurat! Saya nyeri dada parah",
+  "botResponse": {
+    "response": "🚨 PERINGATAN: Jika ini adalah kondisi darurat medis, segera hubungi 119 (ambulans) atau kunjungi IGD rumah sakit terdekat. Jangan menunggu layanan chat untuk kondisi yang mengancam jiwa.",
+    "timestamp": "2025-09-02T22:30:00Z",
+    "quickReplies": [
+      "Hubungi 119", 
+      "Cari IGD terdekat", 
+      "Tips pertolongan pertama"
+    ],
+    "isWithinOperatingHours": false,
+    "isEmergencyDetected": true
+  }
+}
+```
+
+#### Get Chat Operating Hours
+```http
+GET /api/Chat/operating-hours
+Authorization: Bearer <jwt-token>
+```
+
+**Response (200 OK):**
+```json
+{
+  "message": "Operating hours information retrieved successfully",
+  "data": {
+    "isOpen": true,
+    "currentTime": "14:30",
+    "operatingHours": "08:00 - 16:00 WIB",
+    "nextOpenTime": null,
+    "message": "✅ Layanan chat sedang AKTIF (jam 08:00 - 16:00 WIB)\n⏰ Waktu sekarang: 14:30 WIB\n\nSaya siap membantu Anda dengan:\n• Konsultasi kesehatan dan kebugaran\n• Rekomendasi olahraga personal\n• Mood tracking dan motivasi\n• Tips hidup sehat"
   }
 }
 ```
@@ -564,10 +627,13 @@ Burjo/
 - Statistik mood mingguan
 - History mood dengan notes opsional
 
-### 6. **Chatbot Berbahasa Indonesia**
+### 6. **Chatbot dengan Time-based Restrictions** ⭐
 - Respons otomatis dalam bahasa Indonesia
 - Kategori pertanyaan: olahraga, diet, motivasi, umum
-- Respons yang disesuaikan dengan konteks
+- **Jam operasional**: 08:00 - 16:00 WIB
+- **Deteksi darurat 24/7**: Keyword-based emergency detection
+- **Timezone handling**: Otomatis konversi ke SE Asia Standard Time
+- Respons yang disesuaikan dengan konteks dan waktu akses
 
 ## 🚀 Panduan Pengembangan
 

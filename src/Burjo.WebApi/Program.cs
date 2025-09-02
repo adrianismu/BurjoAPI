@@ -23,6 +23,11 @@ var jwtSettings = new JwtSettings();
 builder.Configuration.GetSection("JwtSettings").Bind(jwtSettings);
 builder.Services.AddSingleton(jwtSettings);
 
+// Configure Chat Settings
+var chatSettings = new ChatSettings();
+builder.Configuration.GetSection("ChatSettings").Bind(chatSettings);
+builder.Services.AddSingleton(chatSettings);
+
 // Configure JWT Authentication
 builder.Services.AddAuthentication(options =>
 {
@@ -95,13 +100,14 @@ builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
 builder.Services.AddScoped<IHealthConditionRepository, HealthConditionRepository>();
 builder.Services.AddScoped<IExerciseRepository, ExerciseRepository>();
 builder.Services.AddScoped<IUserScheduleRepository, UserScheduleRepository>();
-builder.Services.AddScoped<IMoodLogRepository, MoodLogRepository>(); // ✅ ACTIVATED
+builder.Services.AddScoped<IMoodLogRepository, MoodLogRepository>(); 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IHealthService, HealthService>();
 builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
-builder.Services.AddScoped<IMoodService, MoodService>(); // ✅ ACTIVATED
-builder.Services.AddScoped<IChatService, ChatService>(); // ✅ ACTIVATED
+builder.Services.AddScoped<IMoodService, MoodService>(); 
+builder.Services.AddScoped<IChatTimeValidationService, ChatTimeValidationService>(); 
+builder.Services.AddScoped<IChatService, ChatService>();
 
 var app = builder.Build();
 

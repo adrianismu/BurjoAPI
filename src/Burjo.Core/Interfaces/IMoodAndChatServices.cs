@@ -13,4 +13,5 @@ public interface IMoodService
 public interface IChatService
 {
     Task<ChatResponseDto> GetResponseAsync(string userMessage, Guid userId);
+    ChatOperatingHoursDto GetOperatingHoursInfo();
 }

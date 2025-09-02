@@ -51,4 +51,16 @@ public class ChatResponseDto
     public DateTime Timestamp { get; set; }
     public string? SuggestedActions { get; set; }
     public List<string> QuickReplies { get; set; } = new();
+    public bool IsWithinOperatingHours { get; set; } = true;
+    public bool IsEmergencyDetected { get; set; } = false;
+    public string? OperatingHoursInfo { get; set; }
+}
+
+public class ChatOperatingHoursDto
+{
+    public bool IsOpen { get; set; }
+    public string CurrentTime { get; set; } = string.Empty;
+    public string OperatingHours { get; set; } = string.Empty;
+    public string? NextOpenTime { get; set; }
+    public string Message { get; set; } = string.Empty;
 }

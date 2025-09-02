@@ -1,5 +1,6 @@
 using Burjo.Core.DTOs;
 using Burjo.Core.Interfaces;
+using Burjo.Core.Models;
 
 namespace Burjo.Infrastructure.Services;
 
@@ -8,15 +9,21 @@ public class ChatService : IChatService
     private readonly IMoodService _moodService;
     private readonly IHealthService _healthService;
     private readonly IRecommendationService _recommendationService;
+    private readonly IChatTimeValidationService _timeValidationService;
+    private readonly ChatSettings _chatSettings;
 
     public ChatService(
         IMoodService moodService,
         IHealthService healthService,
-        IRecommendationService recommendationService)
+        IRecommendationService recommendationService,
+        IChatTimeValidationService timeValidationService,
+        ChatSettings chatSettings)
     {
         _moodService = moodService;
         _healthService = healthService;
         _recommendationService = recommendationService;
+        _timeValidationService = timeValidationService;
+        _chatSettings = chatSettings;
     }
 
     public async Task<ChatResponseDto> GetResponseAsync(string userMessage, Guid userId)
@@ -29,6 +36,41 @@ public class ChatService : IChatService
 
         try
         {
+            // Check if message contains emergency keywords first
+            var isEmergency = _timeValidationService.ContainsEmergencyKeywords(userMessage);
+            
+            // If emergency detected, prioritize emergency response regardless of time
+            if (isEmergency)
+            {
+                response.IsEmergencyDetected = true;
+                response.Response = _timeValidationService.GetEmergencyMessage();
+                response.QuickReplies = new List<string> 
+                { 
+                    "Hubungi 119", 
+                    "Cari IGD terdekat", 
+                    "Tips pertolongan pertama"
+                };
+                return response;
+            }
+
+            // Check operating hours for non-emergency messages
+            var isWithinHours = _timeValidationService.IsWithinOperatingHours();
+            response.IsWithinOperatingHours = isWithinHours;
+            
+            if (!isWithinHours)
+            {
+                response.Response = _timeValidationService.GetOutOfHoursMessage();
+                response.OperatingHoursInfo = this.GetOperatingHoursInfo().Message;
+                response.QuickReplies = new List<string> 
+                { 
+                    "Cek jam operasional", 
+                    "Tips kesehatan umum", 
+                    "Kontak darurat"
+                };
+                return response;
+            }
+
+            // Normal chat processing within operating hours
             // Greeting patterns
             if (IsGreeting(message))
             {
@@ -175,7 +217,7 @@ public class ChatService : IChatService
         }
     }
 
-    private async Task<ChatResponseDto> HandleExerciseQuery(string message, Guid userId)
+    private Task<ChatResponseDto> HandleExerciseQuery(string message, Guid userId)
     {
         var response = new ChatResponseDto { Timestamp = DateTime.UtcNow };
 
@@ -199,16 +241,16 @@ public class ChatService : IChatService
                 response.QuickReplies = new List<string> { "Rekomendasi olahraga", "Buat jadwal", "Motivasi olahraga" };
             }
 
-            return response;
+            return Task.FromResult(response);
         }
         catch
         {
             response.Response = "Maaf, terjadi kesalahan saat memproses pertanyaan olahraga Anda.";
-            return response;
+            return Task.FromResult(response);
         }
     }
 
-    private async Task<ChatResponseDto> HandleHealthQuery(string message, Guid userId)
+    private Task<ChatResponseDto> HandleHealthQuery(string message, Guid userId)
     {
         var response = new ChatResponseDto { Timestamp = DateTime.UtcNow };
 
@@ -226,12 +268,12 @@ public class ChatService : IChatService
                 response.QuickReplies = new List<string> { "Penilaian risiko", "Tips nutrisi", "Kelola stress" };
             }
 
-            return response;
+            return Task.FromResult(response);
         }
         catch
         {
             response.Response = "Maaf, terjadi kesalahan saat memproses pertanyaan kesehatan Anda.";
-            return response;
+            return Task.FromResult(response);
         }
     }
 
@@ -276,5 +318,47 @@ public class ChatService : IChatService
             Timestamp = DateTime.UtcNow,
             QuickReplies = new List<string> { "Mulai mood tracking", "Lihat rekomendasi", "Buat jadwal", "Tips sehat" }
         };
+    }
+
+    public ChatOperatingHoursDto GetOperatingHoursInfo()
+    {
+        var isWithinHours = _timeValidationService.IsWithinOperatingHours();
+        var currentTime = DateTime.Now.ToString("HH:mm");
+        var operatingHours = $"{_chatSettings.OperatingHours.StartTime} - {_chatSettings.OperatingHours.EndTime} WIB";
+        
+        if (isWithinHours)
+        {
+            return new ChatOperatingHoursDto
+            {
+                IsOpen = true,
+                CurrentTime = currentTime,
+                OperatingHours = operatingHours,
+                Message = $"✅ Layanan chat sedang AKTIF (jam {operatingHours})\n" +
+                         $"⏰ Waktu sekarang: {currentTime} WIB\n\n" +
+                         $"Saya siap membantu Anda dengan:\n" +
+                         $"• Konsultasi kesehatan dan kebugaran\n" +
+                         $"• Rekomendasi olahraga personal\n" +
+                         $"• Mood tracking dan motivasi\n" +
+                         $"• Tips hidup sehat"
+            };
+        }
+        else
+        {
+            var timeUntilNext = _timeValidationService.GetTimeUntilNextOperatingHour();
+            var nextOpenTime = DateTime.Now.Add(timeUntilNext).ToString("dd/MM/yyyy HH:mm");
+            
+            return new ChatOperatingHoursDto
+            {
+                IsOpen = false,
+                CurrentTime = currentTime,
+                OperatingHours = operatingHours,
+                NextOpenTime = nextOpenTime,
+                Message = $"🔒 Layanan chat sedang TUTUP\n" +
+                         $"⏰ Jam operasional: {operatingHours}\n" +
+                         $"⏰ Waktu sekarang: {currentTime} WIB\n" +
+                         $"🕐 Buka kembali: {nextOpenTime} WIB\n\n" +
+                         $"Untuk keadaan darurat medis, hubungi 119 atau IGD terdekat."
+            };
+        }
     }
 }
